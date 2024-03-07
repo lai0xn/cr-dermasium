@@ -21,7 +21,6 @@ func (s *Service) Signup(user SignUpPayload) error {
 	userModel := &users.User{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
-		Password:    utils.HashPassword(user.Password),
 		PhoneNumber: user.PhoneNumber,
 		IsActive:    user.IsActive,
 	}
