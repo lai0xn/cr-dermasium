@@ -1,8 +1,6 @@
 package users
 
 import (
-	"time"
-
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
@@ -13,9 +11,10 @@ type User struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Password    string
+	Email       string
 	IsActive    bool
-	Birthday    time.Time
+	Adress      string
+	Age         int
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

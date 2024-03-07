@@ -7,5 +7,7 @@ import (
 
 func RegisterAllRoutes(r chi.Router) {
 	auth := handlers.NewAuth()
+	profile := handlers.NewProfile()
 	auth.RegisterRoutes(r)
+	profile.RegisterRoutes(r)
 }

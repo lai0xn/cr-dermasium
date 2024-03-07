@@ -13,8 +13,8 @@ var jwtSecret = "this is the secrey key"
 
 func GenerateToken(user users.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"Id":  user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"userID": user.ID,
+		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
@@ -23,16 +23,16 @@ func GenerateToken(user users.User) (string, error) {
 	return tokenString, nil
 }
 
-func ParseToken(tokenString string) *jwt.Token {
+func ParseToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
 		log.Println(err)
-		return nil
+		return nil, err
 	}
 
-	return token
+	return token, nil
 }
 
 func RefreshToken(refreshToken string) (string, error) {
@@ -61,8 +61,8 @@ func RefreshToken(refreshToken string) (string, error) {
 
 	// Generate a new JWT token
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": claims["user_id"],                       // Assuming user ID is stored in the refresh token claims
-		"exp":     time.Now().Add(time.Minute * 15).Unix(), // Token expiration time
+		"userID": claims["userID"],                        // Assuming user ID is stored in the refresh token claims
+		"exp":    time.Now().Add(time.Minute * 15).Unix(), // Token expiration time
 	})
 
 	// Sign the token with the secret key

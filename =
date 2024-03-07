@@ -5,13 +5,13 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Service struct{}
+type userService struct{}
 
-func NewService() *Service {
-	return &Service{}
+func NewService() *userService {
+	return &userService{}
 }
 
-func (s *Service) GetUserProfile(id uuid.UUID) (User, error) {
+func (s *userService) GetUserProfile(id uuid.UUID) (User, error) {
 	var user User
 	err := storage.DB.Where("id = ?").First(&user).Error
 	if err != nil {
@@ -20,16 +20,16 @@ func (s *Service) GetUserProfile(id uuid.UUID) (User, error) {
 	return user, nil
 }
 
-func (s *Service) SetUserProfile(id uuid.UUID, payload ProfilePayload) error {
+func (s *userService) SetUserProfile(payload ProfilePayload) error {
 	var user User
-	db := storage.DB.Where("id = ?", id).Find(&user)
+	db := storage.DB.Where("id = ?").Find(&user)
 	if db.Error != nil {
 		return db.Error
 	}
 	user.FirstName = payload.FirstName
 	user.LastName = payload.LastName
 	user.Email = payload.Email
-	user.Age = payload.Age
+	user.Birthday = payload.BirthDay
 	user.Adress = payload.Adress
 	db = storage.DB.Save(&user)
 	if db.Error != nil {
