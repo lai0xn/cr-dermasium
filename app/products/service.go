@@ -5,13 +5,13 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type service struct{}
+type Service struct{}
 
 func NewService() *service {
-	return &service{}
+	return &Service{}
 }
 
-func (s *service) CreateProduct(p ProductPayload) error {
+func (s *Service) CreateProduct(p ProductPayload) error {
 	db := storage.DB.Create(&Product{
 		Name:        p.Name,
 		Description: p.Description,
@@ -25,13 +25,13 @@ func (s *service) CreateProduct(p ProductPayload) error {
 	return nil
 }
 
-func (s *service) DeleteProduct(id uuid.UUID) {
+func (s *Service) DeleteProduct(id uuid.UUID) {
 	var product Product
 	storage.DB.Where("id = ?", id).First(&product)
 	storage.DB.Delete(product)
 }
 
-func (s *service) UpdateProduct(id uuid.UUID, p ProductPayload) error {
+func (s *Service) UpdateProduct(id uuid.UUID, p ProductPayload) error {
 	var product Product
 	db := storage.DB.Where("id = ?", id).First(&product)
 
@@ -50,7 +50,7 @@ func (s *service) UpdateProduct(id uuid.UUID, p ProductPayload) error {
 	return nil
 }
 
-func (s *service) GetProduct(id uuid.UUID) (Product, error) {
+func (s *Service) GetProduct(id uuid.UUID) (Product, error) {
 	var product Product
 	db := storage.DB.Where("id = ?", id).First(&product)
 	if db.Error != nil {
@@ -60,7 +60,7 @@ func (s *service) GetProduct(id uuid.UUID) (Product, error) {
 	return product, nil
 }
 
-func (s *service) GetAllProducts() ([]Product, error) {
+func (s *Service) GetAllProducts() ([]Product, error) {
 	var products []Product
 	db := storage.DB.First(&products)
 	if db.Error != nil {

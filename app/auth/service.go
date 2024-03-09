@@ -84,6 +84,7 @@ func (s *Service) VerifyOTP(userID string, code string) (*users.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	
 	db := storage.DB.Where("id = ?", id).First(&user)
 	if db.Error != nil {
 		return nil, db.Error

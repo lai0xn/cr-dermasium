@@ -134,6 +134,9 @@ func (c *authController) SendOTP(w http.ResponseWriter, r *http.Request) {
 	err := c.service.SendOTP(number.PhoneNumber)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(H{
+			"error": err.Error(),
+		})
 		return
 	}
 	w.WriteHeader(http.StatusOK)
