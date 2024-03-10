@@ -1,36 +1,74 @@
 package cart
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/lai0xn/cr-dermasuim/models"
 	"github.com/lai0xn/cr-dermasuim/storage"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 )
 
 type Service struct{}
 
-func (s *Service) AddToCart(userID uuid.UUID, productID uuid.UUID) error {
-	var product models.Product
+func (s *Service) AddToCart(userID, productID uuid.UUID) error {
+	tx := storage.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var user models.User
-	db := storage.DB.Where("id = ?", userID).Find(&user)
-	if db.Error != nil {
-		return db.Error
+	if err := tx.Preload("Cart").Where("id = ?", userID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return err
 	}
-	db = storage.DB.Where("id = ?", productID).Find(&product)
-	if db.Error != nil {
-		return db.Error
+
+	var cart *models.Cart
+	if user.Cart == nil || user.Cart.ID == uuid.Nil {
+		cart = &models.Cart{UserID: userID}
+		if err := tx.Create(cart).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		cart = user.Cart
 	}
-	if user.Cart.Items != nil {
-		storage.DB.Create(&models.Cart{
-			UserID: user.ID,
-		})
+
+	var existingItem models.Item
+	if err := tx.Where("product_id = ? AND user_id = ? AND cart_id = ?",
+		productID,
+		userID,
+		cart.ID).
+		First(&existingItem).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			return err
+		}
 	}
-	item := &models.Item{
-		ProductID: productID,
-		Quantity:  0,
-		UserID:    user.ID,
+
+	if existingItem.ID != uuid.Nil {
+		fmt.Println(existingItem)
+		existingItem.Quantity++
+		if err := tx.Save(&existingItem).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		newItem := &models.Item{
+			ProductID: productID,
+			Quantity:  1,
+			UserID:    userID,
+			CartID:    cart.ID,
+		}
+
+		if err := tx.Create(newItem).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
-	storage.DB.Create(&item)
-	user.Cart.Items = append(user.Cart.Items, *item)
-	storage.DB.Save(&user)
-	return nil
+
+	return tx.Commit().Error
 }

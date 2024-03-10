@@ -12,3 +12,8 @@ type Cart struct {
 	User   *User
 	Items  []Item
 }
+
+func (u *Cart) BeforeCreate(tx *gorm.DB) error {
+	u.ID = uuid.NewV4()
+	return nil
+}

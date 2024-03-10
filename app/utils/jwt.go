@@ -14,7 +14,7 @@ var jwtSecret = "this is the secrey key"
 func GenerateToken(user models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": user.ID,
-		"exp":    time.Now().Add(time.Hour * 24).Unix(),
+		"exp":    time.Now().Add(time.Hour * 100).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {

@@ -10,8 +10,10 @@ func RegisterAllRoutes(r chi.Router) {
 	profile := handlers.NewProfile()
 	admin := handlers.NewAdmin()
 	products := handlers.NewProducts()
+	cart := handlers.NewCart()
 	auth.RegisterRoutes(r)
 	profile.RegisterRoutes(r)
 	products.RegisterRoutes(r)
 	admin.RegisterRoutes(r)
+	cart.RegisterRoutes(r)
 }
