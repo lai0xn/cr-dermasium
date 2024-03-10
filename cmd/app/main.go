@@ -21,6 +21,12 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "hello world")
 	})
+
+	// media files fodler
+	r.Handle(
+		"/uploads/*",
+		http.StripPrefix("/uploads/", http.FileServer(http.Dir("../../uploads"))),
+	)
 	routes.RegisterAllRoutes(r)
 	log.Println("Server Started listening .....")
 	http.ListenAndServe(":8080", r)

@@ -1,18 +1,22 @@
 package products
 
 import (
+	"errors"
+	"fmt"
+
+	"github.com/lai0xn/cr-dermasuim/models"
 	"github.com/lai0xn/cr-dermasuim/storage"
 	uuid "github.com/satori/go.uuid"
 )
 
 type Service struct{}
 
-func NewService() *service {
+func NewService() *Service {
 	return &Service{}
 }
 
 func (s *Service) CreateProduct(p ProductPayload) error {
-	db := storage.DB.Create(&Product{
+	db := storage.DB.Create(&models.Product{
 		Name:        p.Name,
 		Description: p.Description,
 		Price:       p.Price,
@@ -25,14 +29,21 @@ func (s *Service) CreateProduct(p ProductPayload) error {
 	return nil
 }
 
-func (s *Service) DeleteProduct(id uuid.UUID) {
-	var product Product
-	storage.DB.Where("id = ?", id).First(&product)
-	storage.DB.Delete(product)
+func (s *Service) DeleteProduct(id uuid.UUID) error {
+	var product models.Product
+	db := storage.DB.Where("id = ?", id).First(&product)
+	if db.Error != nil {
+		return db.Error
+	}
+	db = storage.DB.Delete(product)
+	if db.Error != nil {
+		return db.Error
+	}
+	return nil
 }
 
 func (s *Service) UpdateProduct(id uuid.UUID, p ProductPayload) error {
-	var product Product
+	var product models.Product
 	db := storage.DB.Where("id = ?", id).First(&product)
 
 	if db.Error != nil {
@@ -50,20 +61,23 @@ func (s *Service) UpdateProduct(id uuid.UUID, p ProductPayload) error {
 	return nil
 }
 
-func (s *Service) GetProduct(id uuid.UUID) (Product, error) {
-	var product Product
+func (s *Service) GetProduct(id uuid.UUID) (models.Product, error) {
+	var product models.Product
 	db := storage.DB.Where("id = ?", id).First(&product)
 	if db.Error != nil {
-		return product, db.Error
+		return product, errors.New("product not found")
 	}
 
 	return product, nil
 }
 
-func (s *Service) GetAllProducts() ([]Product, error) {
-	var products []Product
-	db := storage.DB.First(&products)
+func (s *Service) GetAllProducts() ([]models.Product, error) {
+	var products []models.Product
+	db := storage.DB.Find(&products)
 	if db.Error != nil {
+		fmt.Println(db.Error)
+
+		return nil, db.Error
 	}
-	return nil, nil
+	return products, nil
 }

@@ -1,4 +1,4 @@
-package users
+package models
 
 import (
 	uuid "github.com/satori/go.uuid"
@@ -14,6 +14,7 @@ type User struct {
 	Email       string
 	IsActive    bool
 	Adress      string
+	Cart        *Cart
 	Age         int
 }
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -13,13 +14,21 @@ type productsController struct {
 	service *products.Service
 }
 
+func NewProducts() *productsController {
+	return &productsController{}
+}
+
 func (c *productsController) RegisterRoutes(r chi.Router) {
-	r.Get("/products/all", c.GetProduct)
-	r.Get("/product/:id", c.GetProduct)
+	r.Get("/products/all", c.GetProducts)
+	r.Get("/product/{id}", c.GetProduct)
 }
 
 func (c *productsController) GetProducts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	products, err := c.service.GetAllProducts()
+	fmt.Println(products)
+	fmt.Println(err)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(H{
@@ -28,6 +37,7 @@ func (c *productsController) GetProducts(w http.ResponseWriter, r *http.Request)
 		return
 
 	}
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(H{
 		"products": products,
 	})
@@ -39,7 +49,7 @@ func (c *productsController) GetProduct(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -47,7 +57,7 @@ func (c *productsController) GetProduct(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 

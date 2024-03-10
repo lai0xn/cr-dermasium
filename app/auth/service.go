@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/lai0xn/cr-dermasuim/app/users"
 	"github.com/lai0xn/cr-dermasuim/app/utils"
+	"github.com/lai0xn/cr-dermasuim/models"
 	"github.com/lai0xn/cr-dermasuim/storage"
 	"github.com/satori/go.uuid"
 	openapi "github.com/twilio/twilio-go/rest/verify/v2"
@@ -18,7 +18,7 @@ func NewService() *Service {
 }
 
 func (s *Service) Signup(user SignUpPayload) error {
-	userModel := &users.User{
+	userModel := &models.User{
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		PhoneNumber: user.PhoneNumber,
@@ -53,8 +53,8 @@ func (s *Service) Refresh(token string) (string, error) {
 	return token, nil
 }
 
-func (s *Service) Signin(payload LoginPayload) (*users.User, error) {
-	var user users.User
+func (s *Service) Signin(payload LoginPayload) (*models.User, error) {
+	var user models.User
 	// if the user already exists there is no need of creating a new one
 	storage.DB.Where("phone_number = ?", payload.PhoneNumber).First(&user)
 	if user.PhoneNumber != "" {
@@ -65,7 +65,7 @@ func (s *Service) Signin(payload LoginPayload) (*users.User, error) {
 		return &user, nil
 	}
 	// create the user and send otp
-	db := storage.DB.Create(&users.User{
+	db := storage.DB.Create(&models.User{
 		PhoneNumber: payload.PhoneNumber,
 	})
 	if db.Error != nil {
@@ -78,13 +78,13 @@ func (s *Service) Signin(payload LoginPayload) (*users.User, error) {
 	return &user, nil
 }
 
-func (s *Service) VerifyOTP(userID string, code string) (*users.User, error) {
-	var user users.User
+func (s *Service) VerifyOTP(userID string, code string) (*models.User, error) {
+	var user models.User
 	id, err := uuid.FromString(userID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	db := storage.DB.Where("id = ?", id).First(&user)
 	if db.Error != nil {
 		return nil, db.Error

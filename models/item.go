@@ -1,16 +1,15 @@
-package items
+package models
 
 import (
-	"github.com/lai0xn/cr-dermasuim/app/products"
-	"github.com/lai0xn/cr-dermasuim/app/users"
 	uuid "github.com/satori/go.uuid"
 )
 
 type Item struct {
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
 	UserID    uuid.UUID
-	User      users.User
+	User      User
 	ProductID uuid.UUID
-	Product   products.Product
+	Product   Product
+	CartID    uuid.UUID
 	Quantity  int
 }

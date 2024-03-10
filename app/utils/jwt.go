@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lai0xn/cr-dermasuim/app/users"
+	"github.com/lai0xn/cr-dermasuim/models"
 )
 
 var jwtSecret = "this is the secrey key"
 
-func GenerateToken(user users.User) (string, error) {
+func GenerateToken(user models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": user.ID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),

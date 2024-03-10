@@ -1,6 +1,7 @@
 package users
 
 import (
+	"github.com/lai0xn/cr-dermasuim/models"
 	"github.com/lai0xn/cr-dermasuim/storage"
 	uuid "github.com/satori/go.uuid"
 )
@@ -11,17 +12,17 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) GetUserProfile(id uuid.UUID) (User, error) {
-	var user User
+func (s *Service) GetUserProfile(id uuid.UUID) (models.User, error) {
+	var user models.User
 	err := storage.DB.Where("id = ?").First(&user).Error
 	if err != nil {
-		return User{}, err
+		return models.User{}, err
 	}
 	return user, nil
 }
 
 func (s *Service) SetUserProfile(id uuid.UUID, payload ProfilePayload) error {
-	var user User
+	var user models.User
 	db := storage.DB.Where("id = ?", id).Find(&user)
 	if db.Error != nil {
 		return db.Error
