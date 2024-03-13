@@ -7,9 +7,9 @@ import (
 
 type Item struct {
 	gorm.Model
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
-	UserID    uuid.UUID
-	User      User
+	ID     uuid.UUID `gorm:"type:uuid;primary_key;"`
+	UserID uuid.UUID
+
 	ProductID uuid.UUID
 	Product   Product
 	CartID    uuid.UUID

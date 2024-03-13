@@ -11,9 +11,11 @@ func RegisterAllRoutes(r chi.Router) {
 	admin := handlers.NewAdmin()
 	products := handlers.NewProducts()
 	cart := handlers.NewCart()
+	orders := handlers.NewOrder()
 	auth.RegisterRoutes(r)
 	profile.RegisterRoutes(r)
 	products.RegisterRoutes(r)
 	admin.RegisterRoutes(r)
 	cart.RegisterRoutes(r)
+	orders.RegistrRoutes(r)
 }

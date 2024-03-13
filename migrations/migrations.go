@@ -13,4 +13,5 @@ func Migrate() {
 	storage.DB.AutoMigrate(models.Cart{})
 	storage.DB.AutoMigrate(models.Item{})
 	storage.DB.AutoMigrate(models.Product{})
+	storage.DB.AutoMigrate(models.Order{})
 }

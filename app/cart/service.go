@@ -72,3 +72,114 @@ func (s *Service) AddToCart(userID, productID uuid.UUID) error {
 
 	return tx.Commit().Error
 }
+
+func (s *Service) DeleteCartItem(userID, itemID uuid.UUID) error {
+	// Begin a transaction
+	tx := storage.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Fetch the user and their cart
+	var user models.User
+	if err := tx.Preload("Cart").Where("id = ?", userID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Check if the user has a cart
+	if user.Cart == nil {
+		tx.Rollback()
+		return fmt.Errorf("user does not have a cart")
+	}
+
+	// Find the item in the cart
+	var item models.Item
+	if err := tx.Where("product_id = ? AND cart_id = ?", itemID, user.Cart.ID).First(&item).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("item not found in cart")
+		}
+		return err
+	}
+
+	// Delete the item
+	if err := tx.Delete(&item).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) ViewCart(userID uuid.UUID) ([]models.Item, error) {
+	var user models.User
+	if err := storage.DB.Preload("Cart").Preload("Cart.Items").Preload("Cart.Items.Product").Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	if user.Cart == nil {
+		return nil, fmt.Errorf("user does not have a cart")
+	}
+
+	return user.Cart.Items, nil
+}
+
+func (s *Service) DecreaseItemQuantity(userID, itemID uuid.UUID) error {
+	// Begin a transaction
+	tx := storage.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Fetch the user and their cart
+	var user models.User
+	if err := tx.Preload("Cart").Preload("Cart.Items").Where("id = ?", userID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Check if the user has a cart
+	if user.Cart == nil {
+		tx.Rollback()
+		return fmt.Errorf("user does not have a cart")
+	}
+
+	// Find the item in the cart
+	var item models.Item
+	for _, cartItem := range user.Cart.Items {
+		fmt.Println(cartItem.ID)
+		if cartItem.ProductID == itemID {
+			item = cartItem
+			break
+		}
+	}
+	if item.ID == uuid.Nil {
+		tx.Rollback()
+		return fmt.Errorf("item not found in cart")
+	}
+
+	// Decrease the quantity of the item
+	if item.Quantity > 0 {
+		item.Quantity--
+		if err := tx.Save(&item).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
+}
