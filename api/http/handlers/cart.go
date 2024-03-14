@@ -38,14 +38,17 @@ func (c CartController) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
+
 	pID, err := uuid.FromString(productID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	err = c.service.AddToCart(uID, pID)
@@ -54,6 +57,7 @@ func (c CartController) AddItemToCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(H{
@@ -70,6 +74,7 @@ func (c CartController) RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	pID, err := uuid.FromString(productID)
@@ -78,6 +83,7 @@ func (c CartController) RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	err = c.service.DeleteCartItem(uID, pID)
@@ -87,6 +93,7 @@ func (c CartController) RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(H{
@@ -103,6 +110,7 @@ func (c CartController) DecreaseQuantity(w http.ResponseWriter, r *http.Request)
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	pID, err := uuid.FromString(productID)
@@ -111,6 +119,7 @@ func (c CartController) DecreaseQuantity(w http.ResponseWriter, r *http.Request)
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	err = c.service.DecreaseItemQuantity(uID, pID)
@@ -124,6 +133,7 @@ func (c CartController) DecreaseQuantity(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(H{
 		"message": "quantity decreased successfully",
 	})
+	return
 }
 
 func (c CartController) ViewCart(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +144,7 @@ func (c CartController) ViewCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 
 	}
 	items, err := c.service.ViewCart(uID)
@@ -142,7 +153,9 @@ func (c CartController) ViewCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(H{
 			"error": err.Error(),
 		})
+		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(H{
 		"items": items,

@@ -45,28 +45,29 @@ func (s *Service) CheckOut(userID uuid.UUID) (models.Order, error) {
 		tx.Rollback()
 		return models.Order{}, err
 	}
-
+	// use raw sql query to delete all items
+	if err := tx.Exec("DELETE FROM items WHERE cart_id = ?", user.Cart.ID).Error; err != nil {
+		return models.Order{}, err
+	}
 	return order, tx.Commit().Error
 }
 
-func (s *Service) HandleWebhook(payload WebhookPayload, orderID uuid.UUID) {
+func (s *Service) HandleWebhook(event string, orderID uuid.UUID) {
 	var order models.Order
 	fmt.Println("connected to webhook")
-	tx := storage.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-	if err := tx.Where("id = ?", orderID).First(&order); err != nil {
-		tx.Rollback()
+	fmt.Println(event)
+
+	fmt.Println(orderID.String())
+	if err := storage.DB.Where("id = ?", orderID).Find(&order).Error; err != nil {
+		fmt.Println(err.Error())
 		panic(err)
 	}
-
-	switch payload.Type {
+	fmt.Println(event)
+	switch event {
 	case "checkout.paid":
+		fmt.Println("the payment is successful")
 		order.IsPayed = true
-		tx.Save(&order)
+		storage.DB.Save(&order)
 	}
 }
 

@@ -13,24 +13,24 @@ import (
 type Service struct{}
 
 func (s *Service) AddToCart(userID, productID uuid.UUID) error {
-	tx := storage.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
 	var user models.User
-	if err := tx.Preload("Cart").Where("id = ?", userID).First(&user).Error; err != nil {
-		tx.Rollback()
+	if err := storage.DB.Preload("Cart").Where("id = ?", userID).First(&user).Error; err != nil {
 		return err
+	}
+
+	var product models.Product
+	if err := storage.DB.Where("id = ?", productID).Find(&product).Error; err != nil {
+		return err
+	}
+
+	if product.ID == uuid.Nil {
+		return errors.New("product not found")
 	}
 
 	var cart *models.Cart
 	if user.Cart == nil || user.Cart.ID == uuid.Nil {
 		cart = &models.Cart{UserID: userID}
-		if err := tx.Create(cart).Error; err != nil {
-			tx.Rollback()
+		if err := storage.DB.Create(cart).Error; err != nil {
 			return err
 		}
 	} else {
@@ -38,19 +38,20 @@ func (s *Service) AddToCart(userID, productID uuid.UUID) error {
 	}
 
 	var existingItem models.Item
-	if err := tx.Where("product_id = ? AND user_id = ? AND cart_id = ?",
-		productID,
-		userID,
-		cart.ID).
-		First(&existingItem).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			tx.Rollback()
-			return err
-		}
+	if err := storage.DB.Where("product_id = ? AND user_id = ? AND cart_id = ?", product.ID, userID, cart.ID).
+		First(&existingItem).Error; err != nil &&
+		!errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 
+	tx := storage.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	if existingItem.ID != uuid.Nil {
-		fmt.Println(existingItem)
 		existingItem.Quantity++
 		if err := tx.Save(&existingItem).Error; err != nil {
 			tx.Rollback()
@@ -121,7 +122,11 @@ func (s *Service) DeleteCartItem(userID, itemID uuid.UUID) error {
 func (s *Service) ViewCart(userID uuid.UUID) ([]models.Item, error) {
 	var user models.User
 	if err := storage.DB.Preload("Cart").Preload("Cart.Items").Preload("Cart.Items.Product").Where("id = ?", userID).First(&user).Error; err != nil {
-		return nil, err
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if user.Cart == nil {

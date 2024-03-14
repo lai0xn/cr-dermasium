@@ -3,7 +3,6 @@ package handlers
 import (
 	"crypto/hmac"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -24,7 +23,7 @@ func NewOrder() *OrdersController {
 
 func (c *OrdersController) RegistrRoutes(r chi.Router) {
 	or := chi.NewRouter()
-	r.Post("/webhook/{orderID}", c.Webhook)
+	r.Post("/webhook/", c.Webhook)
 
 	or.Use(middlewares.IsAuthenticated)
 	or.Post("/", c.CheckOut)
@@ -36,11 +35,11 @@ func (c *OrdersController) CheckOut(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.FromString(userID)
 
 	order, err := c.service.CheckOut(id)
-	fmt.Println(r.Host)
+
 	response := utils.CreateCheckout(
 		order.TotalPrice,
 		"dzd",
-		"https://"+r.Host+"/webhook/"+order.ID.String(),
+		"https://"+r.Host+"/checkout/webhook/"+order.ID.String(),
 	)
 	print(string(response))
 	if err != nil {
@@ -54,6 +53,7 @@ func (c *OrdersController) CheckOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *OrdersController) Webhook(w http.ResponseWriter, r *http.Request) {
+	var checkout orders.WebhookPayload
 	id := chi.URLParam(r, "orderID")
 	signature := r.Header.Get("signature")
 
@@ -72,6 +72,7 @@ func (c *OrdersController) Webhook(w http.ResponseWriter, r *http.Request) {
 
 	// Calculate the signature
 	computedSignature := utils.ComputeHMAC(payload)
+
 	// If the calculated signature doesn't match the received signature, ignore the request
 	if !hmac.Equal([]byte(computedSignature), []byte(signature)) {
 		http.Error(w, "Invalid signature", http.StatusForbidden)
@@ -79,8 +80,6 @@ func (c *OrdersController) Webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderID, _ := uuid.FromString(id)
-	var checkout orders.WebhookPayload
-	json.Unmarshal(payload, &checkout)
-	event_type := checkout.Type
-	c.service.HandleWebhook(event_type, orderID)
+	json.NewDecoder(r.Body).Decode(&checkout)
+	c.service.HandleWebhook(checkout, orderID)
 }
