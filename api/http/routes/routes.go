@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/go-chi/chi"
 	"github.com/lai0xn/cr-dermasuim/api/http/handlers"
+	"github.com/lai0xn/cr-dermasuim/api/ws"
 )
 
 func RegisterAllRoutes(r chi.Router) {
@@ -18,4 +19,5 @@ func RegisterAllRoutes(r chi.Router) {
 	admin.RegisterRoutes(r)
 	cart.RegisterRoutes(r)
 	orders.RegistrRoutes(r)
+	r.HandleFunc("/ws", ws.WsTest)
 }
